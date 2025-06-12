@@ -1,23 +1,12 @@
 pyfqmr : Python Fast Quadric Mesh Reduction
 ===========================================
 
-Cython wrapper around `sp4acerat's quadrics mesh reduction
-algorithm <https://github.com/sp4cerat/Fast-Quadric-Mesh-Simplification>`__.
 
 Requirements:
 ~~~~~~~~~~~~~
 
 -  *Numpy*
--  *Cython* (only for compilation, but not needed if installed from PyPI)
-
-Installation :
-~~~~~~~~~~~~~~
-pyfqmr can be installed via  `pip <https://pypi.org/project/pyfqmr/0.1.1/>`_ :
-
-
-.. code:: bash
-
-    pip install pyfqmr
+-  *Pybind11* (using 2.13.6)
 
 
 Compilation :
@@ -41,24 +30,15 @@ Usage:
     >>> import trimesh as tr
     >>> bunny = tr.load_mesh('example/Stanford_Bunny_sample.stl')
     >>> # Simplify object
-    >>> mesh_simplifier = pyfqmr.Simplify()
-    >>> mesh_simplifier.setMesh(bunny.vertices, bunny.faces)
-    >>> mesh_simplifier.simplify_mesh(target_count = 1000, aggressiveness=7, preserve_border=True, verbose=True)
-    >>> vertices, faces, normals = mesh_simplifier.getMesh()
-    >>>
-    >>> # To make verbose visible, use logging module :
-    >>> import logging
-    >>>
-    >>> # Configure the logger to show debug messages
-    >>> logging.basicConfig(level=logging.DEBUG)
-    >>> logger = logging.getLogger("pyfqmr")
-    >>>
-    >>> # Optionally, log to a file:
-    >>> # logging.basicConfig(filename='mesh_simplification.log', level=logging.DEBUG)
-    >>>
-    >>> # Now, when `simplify_mesh(verbose=True)` is called,
-    >>> # messages will appear in the console or the log file
-
+    >>> verts_out, faces_out = pyfqmr_v1.simplify(
+    >>>     bunny.vertices.astype(np.float64), 
+    >>>     bunny.faces.astype(np.int32), 
+    >>>     target_count=200000, 
+    >>>     aggressiveness=4, 
+    >>>     preserve_border=True, 
+    >>>     max_iterations=50, 
+    >>>     verbose=True
+    >>> )
 
 
 Controlling the reduction algorithm
@@ -86,31 +66,6 @@ Parameters of the **`simplify\_mesh`** method that can be tuned.
     Maximal error after which a vertex is not deleted, only when the lossless flag is set to True.
 -  **verbose**
     Falg controlling verbosity
-
-Controlling the lossless reduction algorithm
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Parameters of the **`simplify\_mesh\_lossless`** method that can be tuned.
-
--  **verbose**
-    Falg controlling verbosity
--  **epsilon**
-    Maximal error after which a vertex is not deleted.
--  **max\_iterations**
-    Maximum number of iterations.
--  **preserve\_border**
-    Flag for preserving the vertices situated on open borders. Applies the method described in `this issue <https://github.com/sp4cerat/Fast-Quadric-Mesh-Simplification/issues/14>`__.
-
-Note
-~~~~
-
-- The **`simplify\_mesh\_lossless`** method is different from the **`simplify\_mesh`** method with the lossless flag enabled, and should be prefered when quality is the aim and not a precise number of target triangles.
-- Tests have shown that the **threshold\_lossless** argument has little to no influence on the reduction of the meshes.
-
-
-Implications of the parameters for the threshold growth rate :
-""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-(``simplify_mesh()`` method when not in lossless mode)
 
 $$threshold = alpha \* (iteration + K)^{agressiveness}$$
 
